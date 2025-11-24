@@ -1,0 +1,100 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Methods and Tools}
+\label{sec:methods}
+\subsection{General}
+These are some tools I used on all projects I worked on.
+\subsubsection{Netcompany Toolkit}
+This is an internal system used to track all things related to a project. Here the customer can create cases, for things they want implemented and solved, and we can assign the cases and create work packages on which we register our hours worked. This automatically gets synced with our time registration software so we can get paid for working. 
+
+This system also stores all relevant documents for a project, e.g. maintenance guide, user guide, etc.
+
+This internal system is one of Netcompany's strengths and makes it easier for new people to be on-boarded onto projects and contains the relevant documentation for cases and the project to get up to date.
+
+Throughout my internship I found myself relying more and more on Netcompany Toolkit. In the beginning it was overwhelming but towards the end, I used it all the time and used it to make sure that my colleagues knew how far I had progressed on certain tasks, and which task I was working on.
+
+It is also used to communicate with the client. By using this tool, instead of e-mail it is ensured that all the people working on a project can search and see all written communication with a client. When there later is disagreement between the client and the team working on a project about what was actually supposed to be done, it is very important that everybody on team has access to what has been communicated. 
+\subsubsection{Intellij Database}
+The IDE(Integrated Development Environment) Intellij has fantastic built-in support for viewing and editing things in the database. It is very easy to find where a certain FK(Foreign Key) reference is referring to, which is invaluable when working with a huge database. 
+
+I had used Intellij before starting at Netcompany but the database support was unknown to me.
+\subsection{National Forsøgsoverblik}
+\label{sec:methods-nationaltforsoegsoverblik}
+
+For the back end Java was used with some Spring framework features. The database was relational, and used Microsoft SQL Server. 
+
+Docker was initially difficult to get up and running and caused me an initial slowdown, but once it worked it was great. It made sure it was always easy to get things running, on everybody's computers. This tool was not used on every project, especially legacy projects and it makes a huge difference. Things more often suddenly breaks and the setup process for non Docker projects can be enormous and tedious. 
+
+When implementing the admin panel, I had to create database migrations for the new tables, using Flyway. This is a great tool. It ensures that the database structure is reproducible. You write migrations, that is SQL scripts, and flyway ensure that they are only ran once, and that they are ran in the correct order. In your local dev environment, this means you can just drop the database and run the migrations using Flyway to get you database in order, if something bad happens locally.
+
+I was also introduced to the system by experienced developers, who could answer any questions I had about the system.
+
+We also used daily stand-ups to discuss anything that blocked us from making progress on our tasks. They usually lasted around 15 minutes. They were very helpful to me, in part because I could ask what I should do if I was confused about something, but also because I get a more general overview of the system and this made me understand the project and the goals of the project better as a whole.
+
+Lastly, one method I used for quickly prototyping the new features in the admin panel, was copying similar code in other parts of the project, and then modifying them to fit my needs, instead of writing the code from scratch. This is great when you are under time pressure, and you are new, don't know what the best practices are yet, and the code is of a generally good quality. 
+
+\subsection{SOCVIAS}
+
+Some of the tools used in subsection \ref{sec:methods-nationaltforsoegsoverblik} were not possible to use in this project. 
+
+Docker could not be used. This is a 20 year old legacy project. Setting up docker was being discussed but not something that had been implemented. It would be quite a big undertaking.
+
+Copying of already existing code should be done with great care, because the code quality here was not always great by today's standard. Not because of the programmer's who wrote the code, but because Java, and Java best practices has evolved quite a bit in 20 years.
+
+In a system as a big as this one, and a system where I am not developing a new feature, but instead modifying existing features, it becomes even more essential to make sure the new code is well tested, and the fact that I had a senior developer to ask for advice was invaluable. Things that would be difficult in project \ref{sec:methods-nationaltforsoegsoverblik}, would be impossible in SOCVIAS, if I had not been able to get advice from more experienced developers. There are so many interconnected parts, and just understanding the functionality of the system is very hard. Understanding how the functionality is currently implemented is almost impossible. 
+
+% SUBTASKS of NAFO and SOCVIAS and go through the methods I use and connect them to academic textbooks.  
+
+% SAFe – Scaled Agile Framework ??? 
+
+% \subsection{Microsoft Toolkit}
+
+% \begin{itemize}
+% \item Find descriptions from Microsoft and/or Netcompany
+% \item We want to show the tools and techinques
+% \item Only practical level that I used it
+% \end{itemize}
+
+% \subsection{Intellij Database}
+% \subsection{Other}
+% Krav specification for …. 
+
+% Test plan… 
+
+% Good Documentation/programming/design Practices… 
+
+% Systems applied and purposes 
+
+
+\section{Results and Deliverables}
+\label{sec:results}
+\subsection{National Forsøgsoverblik}
+The biggest accomplishment on this project was the admin panel I implemented. It made it possible for the system administrators to to manage much of the data being displayed, e.g. the landing page, the FAQ page, user guides, and more through a web interface. 
+
+I developed new Angular components for this, and refactored and reused, some of the older ones. I also created back-end endpoints so the front end and back end could communicate. 
+
+In addition to this, I had to also make an intuitive interface for the system administrators to used. After a few iterations, with feedback from the other developers, I managed to create a user interface that satisfied the customer almost immediately. 
+\subsection{SOCVIAS}
+
+We managed to implement the new Greenland law on time, but went slightly above budget. The client was very satisfied and happy that we managed to deliver on time, so they had no problem with the fact we went slightly above in budget. We almost didn't make it, since one of the core developers were on a holiday when we were supposed to deploy, and we, the other developers, could log in to server, but we could not run scripts on the production database. Something we discovered last minute. Luckily most of the important scripts had been ran before he went on holiday, and the remaining scripts were some small cosmetic things, that could wait. 
+
+\section{Internship Reflection}
+\label{sec:reflection}
+
+When working with IT, there are many competing ideas about what we do. We write
+code, we solve problems and we try to write efficient algorithms, and clean, easy to maintain code. However, is that the point of programming? 
+
+\say{Software is a just a tool to help accomplish something for people - many software engineers never understood that. Keep your eyes on the delivered value, and don't over focus on the specifics of the tools.}\footnote{\label{carmack_quote}John Carmack, ID Software, one of the creators of Doom and Quake}
+
+These are the words of a software engineer who is  widely regarded as one of the most proficient in the world.\footref{carmack_quote} This is also the lesson I have learnt most of all. If the client is irritated, angry, frustrated or not satisfied, you have not done a good job, even if your code is perfect, bug-free and extremely performant. 
+
+I think this is an important step in becoming a good professional software engineer. 
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+In conclusion, this internship has been a great experience. I have gained practical experience of what life as a software engineer is, and how to work in a team, in a way I could never have learnt as intensely through university. I have also gained a \say{studiejob} and my prospects of a good future career have improved. I look forward to doing more engineering in the future!
+
+\end{document}

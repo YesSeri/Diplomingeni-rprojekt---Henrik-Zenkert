@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{subfiles}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\usepackage{listings}
+\usepackage{dirtytalk}
+\raggedright
+\setlength{\parindent}{15pt} 
+
+
+\begin{document}
+\subfile{sections/0-frontpage}
+\pagenumbering{arabic}
+\tableofcontents
+\newpage
+\newpage
+
+
+
+
+\subfile{sections/1-introduction-problem_statement-company_overview}
+\subfile{sections/2-log-book}
+\subfile{sections/3-methods-results-reflection-conclusion}
+
+\end{document}

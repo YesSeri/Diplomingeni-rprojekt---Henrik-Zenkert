@@ -1,0 +1,75 @@
+\documentclass[../main.tex]{subfiles}
+% submit
+% - dtu inside submission page somewhere
+% - write to khalid, to make sure there is a timestamp and add to shared onedrive folder
+% - write one line about when I finished
+\begin{document}
+
+\section{Introduction}
+
+Netcompany is a danish IT consultancy company. It has more than 7000 employees in 6 different countries\footnote{See \url{https://en.wikipedia.org/wiki/Netcompany} (Wikipedia, accessed July 2, 2025).}, where I will be an intern from start February to end of June.
+
+\say{De primære arbejdsopgaver er at udføre programmeringsopgaver o. lign. for Netcompany.}\footnote{From my trainee contract with Netcompany.}
+
+I want to become a professional software engineer. In this report I will summarize my experiences as an intern at Netcompany, working full-time, and evaluate whether this internship has given me the skills necessary to be a good professional software engineer.
+
+\section{Company Overview}
+Netcompany is Denmark's biggest IT consultancy firm. They deliver IT solutions to big businesses and governments, mostly in northern Europe. They have more than 7000 employees. It was founded in 1999. 
+
+Netcompany is broadly divided in to two types of teams. Project delivery teams that build and implement new things, and long-term service teams that support long-term applications
+
+There is no hard divide between software development and operating the software, Dev-ops. Teams are expected to handle both for their applications. 
+
+I am an intern at the APS (Application Services) division of Netcompany. Originally, APS were only tasked with maintaining existing software, that either came from the outside or that the consultancy division wanted to handover. Sometimes there are new projects in APS, but that is usually a smaller part of a larger project that is being maintained.
+
+Netcompany has a Methodology that is called Agile with control. Agile aims to avoid planning to far ahead, since you can not know what will happen far in to the future. Since many projects are done together with state actors, who demand long term planning, Netcompany tries to do agile, while also satisfying client demands, for control over deadlines and outcomes. 
+
+\section{Problem Statement and Tasks}
+
+I have solved two big tasks I when working as a software engineer intern at Netcompany. 
+% I have had three big tasks I have solved when working as a software engineering intern at Netcompany. 
+
+\begin{itemize}
+    \item Building an Admin Panel for \href{https://nationaltforsoegsoverblik.dk/}{National Forsøgsoverblik} 
+    \item Add new code to implement temporary law from \say{Folketinget} for internal \say{sagbehandlingssystem}, case management system, for SOCBS(Social- og Boligstyrelsen), the Danish Authority of Social Services and Housing, regarding Greenland
+    % \item \href{https://henvendelsesform.sbst.dk/}{Henvendelsesformen}, a form for submitting requests to SOCBS. I was tasked with refactoring the front end, and moving PDF functionality to the back end in \say{Henvendelsesformen}, 
+\end{itemize}
+
+In the following subsections I will describe what the challenges of each of these tasks were. 
+
+\subsection{National Forsøgsoverblik}
+
+This was my first assignment. I was completely new at Netcompany. I was instructed to build an admin panel from scratch, and had very free reigns on how to do it. 
+
+There was a word document describing the problems we were solving, but how to do it was up to me. The back end was Java, and Angular for the front end. 
+
+I know Java very well, but had only written a web back end in Spring Boot, a Java framework. This code was written quite different to what I was used to. I had never seen Angular code before. The framework Angular does however have some similarity with the JavaScript library React, with which I have worked quite a bit. 
+
+The whole case was estimated to take 130 hours, of which, I could use around 115-120 hours, since some of it has to be used for code review, and deployment to production. One difficulty is getting a feel for if I am ahead or behind schedule. 
+
+
+The challenges I faced were:
+\begin{itemize}
+    \item New language, Angular
+    \item New to Java server back end
+    \item New workplace, what is the workflow, who can I ask for help?
+    \item Deadlines and limited amounts of hours, am I going to make it within the alotted hours?
+\end{itemize}
+
+
+
+\subsection{SOCVIAS(Social- og Boligstyrelsen VIAS)}
+SOCBS needed to implement some new functionality in their internal systems for handling cases related to Greenland, since \say{Folketinget} had passed a new law. This law gave people on Greenland some additional support to apply for through SOCBS which means they needed to be able to create cases in their systems for budget and case history reasons. 
+
+It was difficult, because the codebase is enormous, over 200.000 LOC(Lines Of Code). One person at work knows it well, but even he admits that there are parts of the code he has never seen, and even less understands.
+
+The code I wrote was only a temporary fix, it will only be in use from 1 May 2025 to 1 August 2025. From 1 August 2025 there will be a more permanent solution. This means it should be implemented as quick and cheap as possible. We did also not have that much time. The new law came very suddenly, which mean that we only had about three weeks to get it up and running. This includes planning, implementation, testing and deployment.
+
+The challenges were:
+\begin{itemize}
+    \item An enormous amount of legacy Java code, more than 200.000 LOC
+    \item A short timeline
+    \item Understanding parts of the jargon of the law so I can see if something seems wrong
+\end{itemize}
+
+\end{document}
