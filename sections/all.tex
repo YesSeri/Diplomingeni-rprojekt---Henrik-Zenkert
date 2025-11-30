@@ -1,0 +1,88 @@
+
+\section{Context, Gap, Innovation and Evaluation OR Abstract?}
+
+DBC Digital operates a fleet of servers specified, built, and deployed
+using Nix files stored in a Git repository. They want to monitor build
+provenance and the system state, to ensure each server matches its
+intended configuration with only expected differences. 
+Currently, DBC Digital maps Nix store paths to Git commits in a CSV file, and uses a PHP script to query servers systems state and display the data. This approach provides some traceability but is slow, limited in
+interactivity, requires SSH access to all servers (a security risk), and
+integrates poorly with existing systems.
+
+This project will build a secure and integrated system for monitoring and
+maintaining mappings between Nix store paths and Git revisions, with
+history, across a fleet of servers.
+At a minimum, the system should match the PHP script's functionality, while offering improved security and performance. Stretch goals include
+making the tool easy to deploy in a plug-and-play manner, ensuring it is user-friendly and well-documented as an open-source project, and further enhancing usability.
+
+\section{Technical and Theoretical Background}
+In modern distributed infrastructures, reproducibility and traceability are essential to ensure reliable operation across large fleets of servers. This project addresses that challenge in the context of NixOS-based systems deployed across multiple data centres.
+
+The goal is to design and implement a host overview system that establishes a reliable mapping between Nix store paths and the git revisions from which they were built. This mapping is fundamental for two reasons:
+
+1. Cluster consistency: Even though each server’s current-system path is unique, the mapping allows us to verify whether all nodes in a cluster correspond to the same git commit. This ensures that a distributed application is running the same software version across data centres.
+
+2. Reproducibility verification: If multiple git commits produce identical nix store paths, we can confirm that changes in the source repository did not affect the system image of a given node. This provides strong guarantees about which changes are operationally relevant.
+
+Embedding commit hashes directly into system builds is infeasible due to recursive commit dependencies and would break the reproducibility guarantees. Instead, this project develops a distributed service that gathers and correlates runtime system data across hundreds of servers.
+
+\subsection{Nix and NixOS}
+\subsection{Reproducible Builds and Store Paths}
+\subsection{Store paths and Git commit hash relation}
+% \subsection{Distributed Systems Essentials}
+% \subsection{High Availability Concepts}
+% \subsection{Existing Tools and Related Work}
+
+
+\section{Overview of the Proposed System}
+\subsection{Motivation and Rationale}
+\subsection{Key Components} 
+Here I will describe the three key components:
+
+\begin{itemize}
+    \item An activation that is deployed to all servers that are surveilled, that records all Nix activations and that also makes the data available
+    \item A scraper that scrapes the data from the activation logger and pushes it to the server that displays the data
+    \item Back end and front end for displaying data
+\end{itemize}
+
+
+\section{Design and Implementation}
+\subsection{Requirements}
+\subsubsection{Functional Requirements}
+\subsubsection{Non-functional Requirements}
+
+\subsection{System Architecture}
+\subsubsection{Overall Architecture}
+\subsubsection{Deployment Across Three Data Centres}
+\subsubsection{API Design}
+\subsubsection{Data Model}
+
+\subsection{Implementation}
+\subsubsection{Backend}
+\subsubsection{Frontend}
+\subsubsection{Integration with Build Pipeline}
+\subsubsection{Security Considerations}
+
+
+\section{Evaluation}
+\subsection{Methodology}
+\subsection{Reliability and Availability}
+\subsection{Performance Evaluation}
+\subsection{Failure Handling}
+
+\section{Discussion}
+
+
+\section{Conclusion and Future Work}
+\subsection{Summary of Contributions}
+\subsection{Limitations}
+\subsection{Future Improvements}
+
+
+\section{Reflection}
+\subsection{Learning Outcomes}
+\subsection{Engineering Considerations}
+
+
+\section{Appendices}
+
