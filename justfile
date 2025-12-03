@@ -5,14 +5,10 @@ pdf := '{build_dir}/main.pdf'
 
 all:
     mkdir -p {{build_dir}}
-    pdflatex -output-directory={{build_dir}} {{src}}
-    pdflatex -output-directory={{build_dir}} {{src}}
-watch:
-	watchexec --restart --stop-signal SIGKILL --exts tex -- 'just all '
+    tectonic -o {{build_dir}} main.tex
 
-copy location:
-   cp build/main.pdf {{location}}
+watch:
+    watchexec --restart --stop-signal SIGKILL --exts tex --ignore {{build_dir}} 'just all'
+
 clean:
 	rm -rf {{build_dir}} 
-
-
