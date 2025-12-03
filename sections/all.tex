@@ -17,26 +17,25 @@ The resulting system provides high-confidence provenance tracking for NixOS depl
 \section{Introduction}
 \subsection{Context, Gap, Innovation and Evaluation}
 
-DBC Digital operates a fleet of NixOS-based servers whose system configurations are specified, built, and deployed from a central Git repository. In such an environment, reproducibility and traceability are essential. Operators must be able to determine exactly which system image is running on each server and verify that these images originate from the same Git revision across nodes. For this reason,  accurate provenance linking Nix store paths to the Git revisions from which they were built is a prerequisite for reliable auditing, and deployment validation.
+DBC Digital operates a fleet of NixOS-based servers whose system configurations are specified, built, and deployed from a central Git repository. In such an environment, reproducibility and traceability are essential. Operators must be able to determine exactly which system image is running on each server and verify that these images originate from the same Git revision across nodes. For this reason,  accurate provenance linking Nix store paths to the Git revisions from which they were built is a prerequisite for reliable auditing and deployment validation.
 
 Currently, this provenance is reconstructed through a fragmented process. The CI system generates a CSV file that maps built Nix store paths to Git commits. To gather runtime activation data, the CI server then uses a custom PHP-based tool that connects to each machine over SSH and retrieves logs produced by the activation script.
 
 
-While this approach works in day-to-day operations, it has several limitations. It requires broad SSH access across the infrastructure, relies on CSV as a primary data store instead of a database which limits querying and historical capabilities, in addition to being difficult to extend or integrate with other systems. As DBC Digital's needs evolve, these issues hinder scalability, security, and operability.
+While this approach works in day-to-day operations, it has several limitations. It requires broad SSH access across the infrastructure, relies on CSV as a primary data store instead of a database, which limits querying and historical capabilities, in addition to being difficult to extend or integrate with other systems. As DBC Digital's needs evolve, these issues hinder scalability, security, and operability.
 
 To address this gap, this project designs and implements a unified, secure host overview system called \textit{hostmap} that maintains a mapping between Nix store paths and the Git revisions that produced them. The system stores runtime activation data from across the infrastructure in a central service, and correlates them with mapping data received from the CI server. 
 
 This enables two key capabilities: verifying cluster consistency by comparing the effective commit behind each node, and validating reproducibility by detecting cases where different commits produce identical store paths.
 
-The proposed system is evaluated by comparing its reliability, security, and usability compared with the existing SSH-based setup. A successful solution will match the functionality of the current tooling while significantly improving security, data quality, and long-term operability.
+The proposed system is evaluated by comparing its reliability, security, and usability with the existing SSH-based setup. A successful solution will match the functionality of the current tooling while significantly improving security, data quality, and long-term operability.
 
 \subsection{Contributions}
 
-WRITE WHAT UNIQUE CONTRIBUTIONS YOU MADE
 
 \newpage
 \section{Problem Description and System Requirements}
-% have a diagram showing problem with ssh access
+% have a diagram showing the problem with SSH access
 \newpage
 \section{Theoretical Background (Optional)}
 \newpage
@@ -50,3 +49,4 @@ WRITE WHAT UNIQUE CONTRIBUTIONS YOU MADE
 \section{Evaluation}
 \newpage
 \section{Discussion}
+\end{document}
