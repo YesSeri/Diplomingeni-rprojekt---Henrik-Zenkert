@@ -2,298 +2,51 @@
 \begin{document}
 \section{Abstract}
 
-DBC Digital operates a fleet of servers specified, built, and deployed
-using Nix files stored in a Git repository. They want to monitor build
-provenance and the system state, to ensure each server matches its
-intended configuration with only expected differences. 
-Currently, DBC Digital maps Nix store paths to Git commits in a CSV file, and uses a PHP script to query servers systems state and display the data. This approach provides some traceability but is slow, limited in
-interactivity, requires SSH access to all servers (a security risk), and
-integrates poorly with existing systems.
+Modern distributed infrastructures rely on reproducibility and traceability to ensure reliable and predictable operation across large fleets of servers. This thesis addresses that challenge in the context of NixOS-based systems deployed across multiple data centres.
 
-This project will build a secure and integrated system for monitoring and
-maintaining mappings between Nix store paths and Git revisions, with
-history, across a fleet of servers.
-At a minimum, the system should match the PHP script's functionality, while offering improved security and performance. Stretch goals include
-making the tool easy to deploy in a plug-and-play manner, ensuring it is user-friendly and well-documented as an open-source project, and further enhancing usability.
+The project designs and implements a host overview system that establishes a reliable mapping between Nix store paths and the Git revisions from which they were built. This mapping enables two key capabilities:
+(1) Cluster consistency analysis, allowing operators to verify whether nodes across a cluster are running system images produced from the same Git commit; and
+(2) Reproducibility verification, by detecting when distinct Git commits generate identical Nix store paths, thereby confirming that source changes do not affect the resulting system image.
+
+Embedding commit hashes directly into system builds is infeasible, as it introduces recursive dependencies and breaks Nix reproducibility guarantees. Instead, this work develops a distributed data-collection and aggregation service that captures runtime system metadata across hundreds of servers and correlates it with information from the build pipeline.
+
+The resulting system provides high-confidence provenance tracking for NixOS deployments and offers a foundation for improved observability, auditing, and debugging of large-scale Nix-based infrastructures.
+
+\newpage
 
 \section{Introduction}
-In modern distributed infrastructures, reproducibility and traceability are essential to ensure reliable operation across large fleets of servers. This project addresses that challenge in the context of NixOS-based systems deployed across multiple data centres.
- 
-The goal is to design and implement a host overview system that establishes a reliable mapping between Nix store paths and the git revisions from which they were built. This mapping is fundamental for two reasons:
- 
-1. Cluster consistency: Even though each server’s current-system path is unique, the mapping allows us to verify whether all nodes in a cluster correspond to the same git commit. This ensures that a distributed application is running the same software version across data centres.
- 
-2. Reproducibility verification: If multiple git commits produce identical nix store paths, we can confirm that changes in the source repository did not affect the system image of a given node. This provides strong guarantees about which changes are operationally relevant.
- 
-Embedding commit hashes directly into system builds is infeasible due to recursive commit dependencies and would break the reproducibility guarantees. Instead, this project develops a distributed service that gathers and correlates runtime system data across hundreds of servers.
+\subsection{Context, Gap, Innovation and Evaluation}
 
-\subsection{Context}
-Brief introduction to DBC Digital and their reliance on a large-scale Nix monorepo infrastructure.
+DBC Digital operates a fleet of NixOS-based servers whose system configurations are specified, built, and deployed from a central Git repository. In such an environment, reproducibility and traceability are essential. Operators must be able to determine exactly which system image is running on each server and verify that these images originate from the same Git revision across nodes. For this reason,  accurate provenance linking Nix store paths to the Git revisions from which they were built is a prerequisite for reliable auditing, and deployment validation.
 
-\subsection{Problem Statement}
-The ``Black Box'' of deployment. We know what is running (the Nix store path), but it is difficult to trace back which Git commit produced it in a dynamic environment.
+Currently, this provenance is reconstructed through a fragmented process. The CI system generates a CSV file that maps built Nix store paths to Git commits. To gather runtime activation data, the CI server then uses a custom PHP-based tool that connects to each machine over SSH and retrieves logs produced by the activation script.
 
-\subsection{Motivation}
-Why this mapping is necessary (debugging, auditing, verifying deployments, rollback confidence).
 
-\subsection{Project Scope}
-\begin{itemize}
-    \item The Agent (Activation Logger).
-    \item The Aggregator (Scraper + CI Listener).
-    \item The Visualization (Server/UI).
-\end{itemize}
+While this approach works in day-to-day operations, it has several limitations. It requires broad SSH access across the infrastructure, relies on CSV as a primary data store instead of a database which limits querying and historical capabilities, in addition to being difficult to extend or integrate with other systems. As DBC Digital's needs evolve, these issues hinder scalability, security, and operability.
 
+To address this gap, this project designs and implements a unified, secure host overview system called \textit{hostmap} that maintains a mapping between Nix store paths and the Git revisions that produced them. The system stores runtime activation data from across the infrastructure in a central service, and correlates them with mapping data received from the CI server. 
+
+This enables two key capabilities: verifying cluster consistency by comparing the effective commit behind each node, and validating reproducibility by detecting cases where different commits produce identical store paths.
+
+The proposed system is evaluated by comparing its reliability, security, and usability compared with the existing SSH-based setup. A successful solution will match the functionality of the current tooling while significantly improving security, data quality, and long-term operability.
+
+\subsection{Contributions}
+
+WRITE WHAT UNIQUE CONTRIBUTIONS YOU MADE
+
+\newpage
+\section{Problem Description and System Requirements}
+% have a diagram showing problem with ssh access
+\newpage
+\section{Theoretical Background (Optional)}
+\newpage
+\section{Project Plan}
 \subsection{Methodology}
-How the project was developed (e.g., agile, iterative, collaboration with the DBC operations team).
-
-
-\section{Theoretical Background (Analysis)}
-
-\subsection{Nix and NixOS Fundamentals}
-
-\subsubsection{The Nix Store and Store Paths}
-Nix, NixOS and the ecosystem around it has one central concept: the Nix store. It is typically located at \lstinline{/nix/store} and contains all built artifacts: binaries, libraries, confiurations and even the entire NixOS system generations. Each artifact is stored under as a \textit{store path} in the following form:
-
-\begin{lstlisting}
-/nix/store/<artifact-hash>-<artifact-name>
-\end{lstlisting}
-
-The \lstinline{<artifact-name>} is an identifier that is easy for humans to read, whereas the hash is a cryptographic hash derived from all the inputs to the build. These inputs are source code, build scripts, nix expressions, dependencies (build and run-time), enviroment variables and configuration options
-
-\subsubsection{Derivations vs. Output Paths}
-Explanation of how derivations produce outputs.
-
-\subsubsection{NixOS Activation Scripts}
-What happens when \texttt{nixos-rebuild switch} runs?
-
-\subsection{Continuous Integration \& Monorepos}
-
-\subsubsection{Monorepo Deployment Challenges}
-Challenges of mapping deployments in large monorepos.
-
-\subsubsection{CI Builds}
-How CI builds generate artifacts from Git commits.
-
-\subsection{Observability Patterns}
-
-\subsubsection{Pull-Based vs. Push-Based Monitoring}
-Differences, trade-offs, and why scraping was chosen for 200 nodes.
-
-\subsection{Existing Solutions}
-
-\subsubsection{Native Nix Functionality}
-Hydra limitations, Prometheus exporters, and why these are insufficient.
-
-\subsubsection{Need for a Custom Solution}
-Justification for building a bespoke system.
-
-% --------------------------------------------------------------------
-
-\section{Requirements Analysis}
-
-\subsection{Functional Requirements}
-\begin{itemize}
-    \item Capture activation time and store path on 200+ nodes.
-    \item Ingest build metadata from CI (Commit Hash $\rightarrow$ Store Path).
-    \item Query the current state of the infrastructure.
-\end{itemize}
-
-\subsection{Non-Functional Requirements}
-
-\subsubsection{Scalability}
-Handling 200 concurrent scrape targets.
-
-\subsubsection{Reliability}
-Scraper must tolerate node downtime.
-
-\subsubsection{Low Overhead}
-Activation logger must not slow down deployments.
-
-\subsubsection{Security}
-Access control for the activation endpoint.
-
-% --------------------------------------------------------------------
-
-\section{System Design \& Architecture}
-
-\subsection{High-Level Architecture}
-Diagram: Git Repo $\rightarrow$ CI Server $\rightarrow$ Scraper $\leftarrow$ Target Servers.
-
-\subsection{Data Model}
-Entities:
-\begin{itemize}
-    \item Commit
-    \item BuildArtifact
-    \item Server
-    \item DeploymentEvent
-\end{itemize}
-Explanation of the join logic between CI data and scraped node data.
-
-\subsection{Component 1: The Node Agent (Activation Logger)}
-
-\subsubsection{Systemd Service or Nix Hook}
-Design description.
-
-\subsubsection{Extracting the System Closure Path}
-How the path is obtained.
-
-\subsubsection{Exposing Data}
-Description of the HTTP endpoint.
-
-\subsection{Component 2: The Scraper \& Aggregator}
-
-\subsubsection{Scraping Strategy}
-Interval-based vs. event-driven scraping.
-
-\subsubsection{CI Webhook Listener}
-Design and workflow.
-
-\subsection{Component 3: Storage}
-
-\subsubsection{Database Choice}
-SQL vs time-series vs key-value, and justification.
-
-% --------------------------------------------------------------------
-
+\newpage
+\section{Solution}
+\newpage
 \section{Implementation}
-
-\subsection{Nix Integration}
-
-\subsubsection{Nix Module Development}
-How the module was written and deployed to 200 servers.
-
-\subsubsection{Activation Phase Hooking}
-Ensuring it runs safely without interfering with the system.
-
-\subsection{Scraper Logic}
-
-\subsubsection{Concurrency and Async Scraping}
-Implementation details.
-
-\subsubsection{Error Handling}
-Behaviour when nodes are unreachable.
-
-\subsection{Mapping Logic}
-
-\subsubsection{Correlation Algorithm}
-How store paths are linked to CI commit history.
-
-\subsection{Deployment}
-
-\subsubsection{Packaging with Nix}
-How the entire toolset is built and deployed.
-
-% --------------------------------------------------------------------
-
-\section{Testing and Validation}
-
-\subsection{Unit Testing}
-Testing parsers, API handlers, etc.
-
-\subsection{Integration Testing}
-
-\subsubsection{NixOS Tests}
-QEMU-based simulation of activation events.
-
-\subsection{Live Environment Testing at DBC Digital}
-
-\subsubsection{Deployment to 200 Servers}
-Observations and behaviour.
-
-\subsubsection{Performance Metrics}
-Was scraping 200 nodes fast enough?
-
-\subsubsection{Accuracy Verification}
-Did the mapping match reality?
-
-% --------------------------------------------------------------------
-
+\newpage
+\section{Evaluation}
+\newpage
 \section{Discussion}
-
-\subsection{Challenges Encountered}
-Issues such as network firewalls, Nix store path nuances, CI inconsistencies.
-
-\subsection{Architectural Reflection}
-
-\subsubsection{Pull vs. Push}
-Pros and cons; whether push would have been better.
-
-\subsection{Scalability}
-Would this scale to 2000 servers?
-
-\subsection{Security}
-Security implications of exposing endpoints on all servers.
-
-% --------------------------------------------------------------------
-
-\section{Conclusion}
-
-Summary of achievements and final assessment of mapping accuracy.
-
-% --------------------------------------------------------------------
-
-\section{Future Work}
-
-\subsection{Alerting on Version Drift}
-e.g., ``Server X is 50 commits behind.''
-
-\subsection{Deployment Graph Visualization}
-Ideas for more advanced visual analysis of deployments.
-
-
-% \section{Technical and Theoretical Background}
-
-% \subsection{Nix and NixOS}
-% \subsection{Reproducible Builds and Store Paths}
-% \subsection{Store paths and Git commit hash relation}
-% % \subsection{Distributed Systems Essentials}
-% % \subsection{High Availability Concepts}
-% % \subsection{Existing Tools and Related Work}
-
-% \section{Overview of the Proposed System}
-% \subsection{Motivation and Rationale}
-% \subsection{Key Components} 
-% Here I will describe the three key components:
-
-% \begin{itemize}
-%     \item An activation that is deployed to all servers that are surveilled, that records all Nix activations and that also makes the data available
-%     \item A scraper that scrapes the data from the activation logger and pushes it to the server that displays the data
-%     \item Back end and front end for displaying data
-% \end{itemize}
-
-% \section{Design and Implementation}
-% \subsection{Requirements}
-% \subsubsection{Functional Requirements}
-% \subsubsection{Non-functional Requirements}
-
-% \subsection{System Architecture}
-% \subsubsection{Overall Architecture}
-% \subsubsection{Deployment Across Three Data Centres}
-% \subsubsection{API Design}
-% \subsubsection{Data Model}
-
-% \subsection{Implementation}
-% \subsubsection{Backend}
-% \subsubsection{Frontend}
-% \subsubsection{Integration with Build Pipeline}
-% \subsubsection{Security Considerations}
-
-% \section{Evaluation}
-% \subsection{Methodology}
-% \subsection{Reliability and Availability}
-% \subsection{Performance Evaluation}
-% \subsection{Failure Handling}
-
-% \section{Discussion}
-
-% \section{Conclusion and Future Work}
-% \subsection{Summary of Contributions}
-% \subsection{Limitations}
-% \subsection{Future Improvements}
-
-% \section{Reflection}
-% \subsection{Learning Outcomes}
-% \subsection{Engineering Considerations}
-
-% \section{Appendices}
-\end{document}
