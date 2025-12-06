@@ -47,57 +47,48 @@ The proposed system is evaluated by comparing its reliability, security, and usa
     \centering
     \includegraphics[width=1.00\textwidth]{images/buildtime.drawio.pdf}
     \caption{Creating mappings between commit hashes and nix store paths}
-    \label{fig:diagram-problem}
+    \label{fig:diagram-buildtime}
 \end{figure}
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1.00\textwidth]{images/runtime.drawio.pdf}
     \caption{Scraping activation data over SSH}
-    \label{fig:diagram-problem}
+    \label{fig:diagram-runtime}
 \end{figure}
 
-We can clearly see in Diagram \ref{fig:diagram-problem} that the PHP tool DBC Digital uses requires SSH access to all servers. This is a security concern. If the CI server is compromised, then all the hosts in the network are compromised, bypassing firewall guarantees. 
+Diagram~\ref{fig:diagram-runtime} show that the PHP tool DBC Digital uses requires SSH access to all servers. This is a security concern. If the CI server is compromised, an attacker could gain privileged access to every host via the CI server, effectively bypassing firewall protections.
 
-The CI Server performs SSH scraping, but it prioritizes building first and then scraping, which can result in severe delays in the up-to-dateness of the activation data. The delays can be up to an hour. This is problematic for the infrastructure team at DBC. Since they use this tool to ensure that the hosts in a cluster are running the same version, these delays make version monitoring difficult. 
+The CI Server performs SSH scraping, but it prioritizes building first and then scraping, which can result in delays of up to an hour in reflecting the latest activations in the CSV file.
+
+The delays can be up to an hour. This is problematic for the infrastructure team at DBC. Since they use this tool to ensure that the hosts in a cluster are running the same version, these delays make version monitoring difficult. 
 
 Creating mappings between commit hash and store path is out of scope for the project. My system will receive a mapping and be responsible for linking it with the correct host and activation data. DBC Digital has decided that its CI Server will create the mapping, since it is already building the system image for other purposes.
 
+\subsection{Why do we need mappings}
+Diagram~\ref{fig:diagram-buildtime} illustrates how the mappings are created. One might assume that a naiver, and more straightforward way to link a Nix store path to a Git commit would be to embed the commit hash directly into the Nix derivation that builds the system. However, this approach is infeasible due to the recursive dependency it introduces. Embedding the commit hash would require knowledge of the commit at build time, which in turn depends on the build process itself. This circular dependency breaks Nix's reproducibility guarantees and complicates the build process.
 
-% ### **Problem Description**
-% 
-% * Explain the exact challenge: provenance reconstruction is fragmented, insecure, and hard to query.
-% * Clarify what operators *cannot* do today (e.g., cluster consistency verification).
-% * Define the scope: you are not redesigning the entire CI system; only provenance tracking.
-% 
-% ### **System Requirements**
-% 
-% Use two parts:
-% 
-% #### **Functional Requirements (FR):**
-% 
-% Examples:
-% 
-% * The system must ingest activation events from all hosts.
-% * The system must store mappings between store paths and Git revisions.
-% * The system must allow operators to query the current revision per host.
-% * The system must detect when nodes in a cluster run different revisions.
-% 
-% #### **Non-Functional Requirements (NFR):**
-% 
-% Examples:
-% 
-% * Security (no SSH needed from CI → servers)
-% * Reliability (must survive network interruptions)
-% * Extensibility (new data fields can be added later)
-% * Performance (support X servers, Y activations/day)
-% * Maintainability (simple deployment, readable code)
-% 
-% This section sets **success criteria** for your solution.
-%
-% have a diagram showing the problem with SSH access
+In addition to this recursive issue, we would also not be able to verifiy that a host has not changed between to commits if we embed the commit hash directly into the derivation, which is a key requirement for DBC Digital.
 
-% DBC Digital needs to have a 
+\subsection{System Requirements}
+
+The system requirements are divided into functional and non-functional requirements.
+\subsubsection{Functional Requirements (FR):}
+\begin{itemize}
+	\item The system must ingest activation events from all hosts.
+	\item The system must store mappings between store paths and Git revisions.
+	\item The system must allow operators to query the current revision per host.
+	\item The system must present hosts grouped into clusters in the UI.
+\end{itemize}
+\subsubsection{Non-Functional Requirements (NFR):}
+\begin{itemize}
+	\item Security, no SSH needed from CI to servers
+	\item Reliability, must survive network interruptions
+	\item Extensibility, new metadata fields can be added later.
+	\item Performance, must work well when deployed to 200 servers, that will be activated on a maximum an average of once per day.
+	\item Maintainability, simple deployment
+\end{itemize}
+
 \newpage
 \section{Theoretical Background (Optional)}
 \newpage
