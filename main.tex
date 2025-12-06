@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage[scaled=0.92]{helvet}
+\usepackage{helvet}
 \renewcommand{\familydefault}{\sfdefault}
 \usepackage{graphicx}
 \usepackage{subfiles}
@@ -46,3 +46,223 @@
 \end{document}
 
 
+
+% # ⭐ **1. Abstract**
+% 
+% **Length:** ~½ page maximum
+% **Purpose:** Give the reader the *entire story* in compressed form.
+% 
+% Include **four things** (CGIE model):
+% 
+% 1. **Context:**
+% 
+%    * DBC Digital uses NixOS; provenance matters for reproducibility and auditing.
+% 
+% 2. **Gap:**
+% 
+%    * Current provenance tracking is fragmented (CSV + SSH + PHP), insecure, and not scalable.
+% 
+% 3. **Innovation:**
+% 
+%    * You built *hostmap*: a secure, unified system linking Nix store paths to Git commits.
+% 
+% 4. **Evaluation:**
+% 
+%    * Summarize results: improved reliability, security, data quality; matches or exceeds old system.
+% 
+% **Do *not* include:** code, citations, detailed architecture.
+% 
+% ---
+% 
+% # ⭐ **2. Introduction**
+% 
+% This section *motivates* the project and gives the reader an overview.
+% 
+% ### 2.1 **Context, Gap, Innovation and Evaluation (CGIE)**
+% 
+% * Introduce the infrastructure and why provenance matters.
+% * Explain shortcomings of the existing system.
+% * Present your high-level contribution (hostmap).
+% * Describe how the solution is evaluated (reliability + security + usability).
+% 
+% This subsection should read like a **story**, not like a requirements list.
+% 
+% ### 2.2 **Contributions**
+% 
+% Make a bullet list of the *new things you built*. Examples:
+% 
+% * A secure host overview service (hostmap)
+% * An activation scraper and ingestion pipeline
+% * A CI integration producing commit→store-path mappings
+% * A UI or API for cluster consistency checks
+% * Documentation suitable for internal or open-source use
+% * A reproducibility verification mechanism
+% 
+% ***Important:*** Contributions should be *sharp, measurable, technical*.
+% 
+% ---
+% 
+% # ⭐ **3. Problem Description and System Requirements**
+% 
+% This is where you formally state the *problem you are solving* and what a solution must do.
+% 
+% ### **Problem Description**
+% 
+% * Explain the exact challenge: provenance reconstruction is fragmented, insecure, and hard to query.
+% * Clarify what operators *cannot* do today (e.g., cluster consistency verification).
+% * Define the scope: you are not redesigning the entire CI system; only provenance tracking.
+% 
+% ### **System Requirements**
+% 
+% Use two parts:
+% 
+% #### **Functional Requirements (FR):**
+% 
+% Examples:
+% 
+% * The system must ingest activation events from all hosts.
+% * The system must store mappings between store paths and Git revisions.
+% * The system must allow operators to query the current revision per host.
+% * The system must detect when nodes in a cluster run different revisions.
+% 
+% #### **Non-Functional Requirements (NFR):**
+% 
+% Examples:
+% 
+% * Security (no SSH needed from CI → servers)
+% * Reliability (must survive network interruptions)
+% * Extensibility (new data fields can be added later)
+% * Performance (support X servers, Y activations/day)
+% * Maintainability (simple deployment, readable code)
+% 
+% This section sets **success criteria** for your solution.
+% 
+% ---
+% 
+% # ⭐ **4. Theoretical Background (Optional)**
+% 
+% Include **only if needed**.
+% This section explains concepts the reader must understand *before* reading the solution.
+% 
+% Examples relevant to your thesis:
+% 
+% * How NixOS builds systems (system closure, store paths, derivations)
+% * Why Git commit metadata cannot be embedded in Nix derivations (infinite recursion)
+% * Event sourcing / logging theory (if relevant)
+% * Software provenance concepts
+% * Basics of distributed systems observability
+% 
+% If the reader needs these to understand later sections → include them.
+% If not → keep this section short or omit it entirely.
+% 
+% ---
+% 
+% # ⭐ **5. Project Plan**
+% 
+% Describe how you structured and executed the project.
+% 
+% ### Include:
+% 
+% * Timeline (e.g., Gantt chart or milestones)
+% * Major phases (research, design, prototype, implementation, evaluation)
+% * Tools used for planning (Git, Notion, Jira, etc.)
+% * Any collaboration or supervision constraints
+% 
+% **This section is not technical**—it describes *how* you organized the work.
+% 
+% ### 5.1 **Methodology**
+% 
+% Explain your scientific and engineering approach.
+% 
+% Examples:
+% 
+% * CGIE as a guiding framework
+% * Iterative development (e.g., Agile-like workflow)
+% * How design decisions were evaluated
+% * Data collection methods for evaluation
+% * Why you chose Rust, Axum, SQL, Nix, etc.
+% 
+% ---
+% 
+% # ⭐ **6. Solution**
+% 
+% This is the **high-level design / architecture**, NOT the implementation.
+% 
+% ### Include:
+% 
+% * System overview diagram
+% * Architecture components:
+% 
+%   * Activation logger
+%   * API / scraper
+%   * Database
+%   * CI-mapping ingestion
+%   * Web UI / CLI
+% * How data flows through the system
+% * Security design decisions
+% * Why this architecture satisfies the requirements
+% * Alternatives considered (and why rejected)
+% 
+% Think of this section as your **design document**.
+% 
+% ---
+% 
+% # ⭐ **7. Implementation**
+% 
+% This is where you go *into the details*.
+% 
+% ### Include:
+% 
+% * Technologies used (Rust, Axum, SQLx, Tera, etc.)
+% * Database schema + migrations
+% * API endpoints
+% * Data structures
+% * CI integration mechanism
+% * How activation data is parsed and validated
+% * Error handling
+% * Deployment considerations
+% * Code snippets (when they clarify something)
+% 
+% Avoid huge code dumps—summarize with diagrams and short snippets instead.
+% 
+% ---
+% 
+% # ⭐ **8. Evaluation**
+% 
+% This shows whether your system works, based on the requirements from Section 3.
+% 
+% ### Include measurable results:
+% 
+% * Correctness of store-path → commit mappings
+% * How well the system reconstructs activation history
+% * Performance tests (ingestion speed, query speed)
+% * Security improvements (no SSH from CI → servers)
+% * Comparison table: *old vs new system*
+% 
+% ### Also include qualitative evaluation:
+% 
+% * Operator usability
+% * Maintainability
+% * Extensibility
+% * Deployment simplicity
+% 
+% Tie all results back to the requirements you defined earlier.
+% 
+% ---
+% 
+% # **9. Discussion**
+% 
+% Here you reflect critically.
+% 
+% ### Include:
+% 
+% * Limitations of your system
+% * Unexpected design challenges
+% * What you would do differently with more time
+% * How the system could evolve (future work)
+% * Risks and assumptions
+% * Generalizability — can this be used outside DBC Digital?
+% 
+% This section shows **maturity and academic reflection**.
+% 
+% 
