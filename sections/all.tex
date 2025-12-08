@@ -91,9 +91,11 @@ The system requirements are divided into functional and non-functional requireme
 
 \newpage
 \section{Theoretical Background (Optional)}
-NixOS is a Linux distribution built with the Nix package manager. Nix is a declarative package manager. This means you declare all the dependencies in a .nix file for your project or NixOS system. Unique for Nix is that when the .nix file is evaluated, the result is always reproducible. This is done similarly to how a pure function works. 
+NixOS is a Linux distribution built with the Nix package manager, which enables declarative and reproducible systems. In Nix, the inputs required to build a package, e.g., source files, compilers, environment variables, libraries, and more, are specified in a \lstinline{.nix} file, and when using flakes (a newer workflow for nix), their exact versions are pinned in a \lstinline{flake.lock} file.
 
-A pure function is a function that depends on no hidden state. Regardless of where and when the function is executed, it will always, for the same input, return the same output. In your Nix file, you explicitly list all of your inputs(dependencies), down to the exact commit hash (with flakes done through a flake.lock file), and when you run this file, a .drv (derivation file) is produced. In Nix, a derivation file is the low-level build instruction that Nix actually executes, a sort of recipe that contains the following:
+Nix is analogous to how a pure function works. A pure function has no hidden state. Regardless of where, how, or when the pure function is executed, it will, for the same input, return the same output.
+In your Nix expression, you list all of your required inputs, and when evaluated it produces a \lstinline{.drv} (derivation) file .
+In Nix, a derivation file is the low-level build instruction that Nix actually executes, a sort of recipe that contains the following:
 
 \begin{itemize}
     \item All build inputs (paths to compilers, libs)
