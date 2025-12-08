@@ -91,6 +91,28 @@ The system requirements are divided into functional and non-functional requireme
 
 \newpage
 \section{Theoretical Background (Optional)}
+NixOS is a Linux distribution built with the Nix package manager. Nix is a declarative package manager. This means you declare all the dependencies in a .nix file for your project or NixOS system. Unique for Nix is that when the .nix file is evaluated, the result is always reproducible. This is done similarly to how a pure function works. 
+
+A pure function is a function that depends on no hidden state. Regardless of where and when the function is executed, it will always, for the same input, return the same output. In your Nix file, you explicitly list all of your inputs(dependencies), down to the exact commit hash (with flakes done through a flake.lock file), and when you run this file, a .drv (derivation file) is produced. In Nix, a derivation file is the low-level build instruction that Nix actually executes, a sort of recipe that contains the following:
+
+\begin{itemize}
+    \item All build inputs (paths to compilers, libs)
+    \item All environment variables
+    \item The builder script to run
+    \item The output paths the build should produce
+    \item All dependencies by exact store paths
+\end{itemize}
+
+Once the derivation is produced, Nix executes it to build the final artifact, which can be a package, an application, a library, a binary, or an entire NixOS system configuration. Because every dependency is pinned and every build step is described explicitly in the derivation, the build process is deterministic and reproducible.
+
+This process guarantees that identical inputs always produce identical outputs, because the final artifact is placed in a content-addressed store path in /nix/store whose hash is computed from all of its declared inputs. The hash encodes every dependency: the exact versions of compilers and libraries, the builder script, all environment variables, and even the hashes of the dependencies’ own store paths. As a result, two derivations that differ in any meaningful way—such as using a different compiler version or source file—will produce different store paths.
+
+To ensure that each input is correct, Nix verifies downloaded sources and fixed-output derivations against cryptographic hashes specified in the Nix expression or stored in the flake.lock file. If a source file does not match the expected hash, Nix refuses to build and reports an error. This mechanism prevents accidental inconsistencies as well as supply-chain tampering, since a modified or corrupted input would fail validation.
+
+Together, content-addressed store paths and cryptographic hash verification ensure that the entire build process is not only reproducible, but also trustworthy and tamper-evident: the outputs you obtain are precisely those described by the inputs you declared.
+
+For comparison, consider Python’s \texttt{requirements.txt}. Even if two developers pin exactly the same Python package versions, their environments can still differ in important ways. The \texttt{requirements.txt} file does not specify which Python interpreter version is used, and Python packages often behave differently when built for Python~3.8 versus Python~3.11. Many Python packages also depend on system-level C libraries—such as OpenSSL, \texttt{libjpeg}, or BLAS—that vary across machines and are not recorded in the requirements file. As a result, two users with identical \texttt{requirements.txt} files may end up with different binaries, different dependency graphs, or different runtime behaviour. Nix avoids this ambiguity by tracking \emph{all} dependencies, not only the Python-level ones, and by encoding them into the derivation and the store-path hash.
+
 \newpage
 \section{Project Plan}
 \subsection{Methodology}
