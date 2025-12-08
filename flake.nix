@@ -1,7 +1,7 @@
 {
-	  description = "Dev shell with just and Tectonic";
+	  description = "bachelor thesis dev shell";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
 
   outputs = { self, nixpkgs }:
     let
@@ -15,9 +15,10 @@
             pkgs.just
             pkgs.watchexec
             pkgs.tectonic
+			pkgs.pandoc
           ];
           shellHook = ''
-            echo "Welcome to the Nix devShell with just and Tectonic!"
+            echo "lets go write some report yo"
           '';
         };
       });
