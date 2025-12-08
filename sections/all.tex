@@ -93,27 +93,33 @@ The system requirements are divided into functional and non-functional requireme
 \section{Theoretical Background (Optional)}
 NixOS is a Linux distribution built with the Nix package manager, which enables declarative and reproducible systems. In Nix, the inputs required to build a package, e.g., source files, compilers, environment variables, libraries, and more, are specified in a \lstinline{.nix} file, and when using flakes (a newer workflow for nix), their exact versions are pinned in a \lstinline{flake.lock} file.
 
-Nix is analogous to how a pure function works. A pure function has no hidden state. Regardless of where, how, or when the pure function is executed, it will, for the same input, return the same output.
-In your Nix expression, you list all of your required inputs, and when evaluated it produces a \lstinline{.drv} (derivation) file .
-In Nix, a derivation file is the low-level build instruction that Nix actually executes, a sort of recipe that contains the following:
+To understand Nix we can compare it to how pure function in functional programming works. A pure function has no hidden state and , it will, for the same input, return the same output.
 
-\begin{itemize}
-    \item All build inputs (paths to compilers, libs)
-    \item All environment variables
-    \item The builder script to run
-    \item The output paths the build should produce
-    \item All dependencies by exact store paths
-\end{itemize}
+Drawing inspiration from this, nix does the same for software builds. In your Nix expression, you list all of your required inputs, and for the same build inputs the build artifact will, regardless of where, how, or when it is built, always be the same.
 
-Once the derivation is produced, Nix executes it to build the final artifact, which can be a package, an application, a library, a binary, or an entire NixOS system configuration. Because every dependency is pinned and every build step is described explicitly in the derivation, the build process is deterministic and reproducible.
+The build inputs all appear in the final store path of the artifact under \lstinline{/nix/store/<unique-hash>-<name>}, and the unique hash is calculated from all the build inputs. If you change something small, such as an environment variable, the inputs will be altered and thus the hash of the build artifact will be changed. This ensures reproducible and deterministic builds. If the store path is identical, the contents are identical as well. 
 
-This process guarantees that identical inputs always produce identical outputs, because the final artifact is placed in a content-addressed store path in /nix/store whose hash is computed from all of its declared inputs. The hash encodes every dependency: the exact versions of compilers and libraries, the builder script, all environment variables, and even the hashes of the dependencies’ own store paths. As a result, two derivations that differ in any meaningful way—such as using a different compiler version or source file—will produce different store paths.
+To ensure that the inputs themselves(which are also nix expressions) have not been altered, Nix downloads all of the sources and evaluates the nix expressions. If the output hash does not match the expected hash in the input, something unexpected has happened. The input might have been corrupted, or tampered with, and the build fails. 
 
-To ensure that each input is correct, Nix verifies downloaded sources and fixed-output derivations against cryptographic hashes specified in the Nix expression or stored in the flake.lock file. If a source file does not match the expected hash, Nix refuses to build and reports an error. This mechanism prevents accidental inconsistencies as well as supply-chain tampering, since a modified or corrupted input would fail validation.
+\begin{figure}[h]
+\begin{lstlisting}
+flask==1.0.0
+numpy==1.0.4
+pillow==1.2.0
+requests==1.3.1
+cryptography==2.0.0
+\end{lstlisting}
+\caption{An example \texttt{requirements.txt} file that appears reproducible but does not capture system-level dependencies, interpreter versions, or platform differences.}
+\label{lst:reqfile}
+\end{figure}
 
-Together, content-addressed store paths and cryptographic hash verification ensure that the entire build process is not only reproducible, but also trustworthy and tamper-evident: the outputs you obtain are precisely those described by the inputs you declared.
 
-For comparison, consider Python’s \texttt{requirements.txt}. Even if two developers pin exactly the same Python package versions, their environments can still differ in important ways. The \texttt{requirements.txt} file does not specify which Python interpreter version is used, and Python packages often behave differently when built for Python~3.8 versus Python~3.11. Many Python packages also depend on system-level C libraries—such as OpenSSL, \texttt{libjpeg}, or BLAS—that vary across machines and are not recorded in the requirements file. As a result, two users with identical \texttt{requirements.txt} files may end up with different binaries, different dependency graphs, or different runtime behaviour. Nix avoids this ambiguity by tracking \emph{all} dependencies, not only the Python-level ones, and by encoding them into the derivation and the store-path hash.
+Contrast this with the approach of traditional package managers. There are many and they all share the same problem, e.g. npm, pip, Maven, etc. With pip one uses a requirements.txt file. Fig. \ref{lst:reqfile} looks reproducible at a first glance, since the exact versions are specified. There are however several problems. Two examples are: we do not know which version of python we need and libraries such as cryptography and requests depends on native system libraries, in this case OpenSSL. The version of OpenSSL is not specified.
+
+These two problems may lead to the classic "it works on my machine" problem, and subtle bugs, that are hard to diagnose.
+
+By treating builds like pure functions and embedding all inputs directly into the Nix store paths, Nix enables strong reproducibility guarantees. These ideas form one of the foundations for the system developed in this project, which relies on the deterministic nature of Nix builds to support reliable provenance tracking and auditing.
+
 
 \newpage
 \section{Project Plan}
