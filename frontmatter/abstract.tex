@@ -1,0 +1,16 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+\section*{Abstract}
+
+Modern distributed infrastructures rely on reproducibility and traceability to ensure reliable and predictable operation across large fleets of servers. This thesis addresses that challenge in the context of NixOS-based systems deployed across multiple data centres.
+
+The project designs and implements a host overview system that establishes a reliable mapping between Nix store paths and the Git revisions from which they were built. This mapping enables two key capabilities:
+(1) Cluster consistency analysis, allowing operators to verify whether nodes across a cluster are running system images produced from the same Git commit; and
+(2) Reproducibility verification, by detecting when distinct Git commits generate identical Nix store paths, thereby confirming that source changes do not affect the resulting system image.
+
+Embedding commit hashes directly into system builds is infeasible, as it introduces recursive dependencies and breaks Nix reproducibility guarantees. Instead, this work develops a distributed data-collection and aggregation service that captures runtime system metadata across hundreds of servers and correlates it with information from the build pipeline.
+
+The resulting system provides high-confidence provenance tracking for NixOS deployments and offers a foundation for improved observability, auditing, and debugging of large-scale Nix-based infrastructures.
+
+\newpage
+\end{document}

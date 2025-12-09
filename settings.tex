@@ -1,0 +1,56 @@
+
+\definecolor{dtuRed}    {rgb/cmyk}{0.6,0,0 / 0,0.91,0.72,0.23}
+\definecolor{blue}      {rgb/cmyk}{0.1843,0.2431,0.9176 / 0.88,0.76,0,0}
+\definecolor{brightGreen}{rgb/cmyk}{0.1216,0.8157,0.5098 / 0.69,0,0.66,0}
+\definecolor{navyBlue}  {rgb/cmyk}{0.0118,0.0588,0.3098 / 1,0.9,0,0.6}
+\definecolor{yellow}    {rgb/cmyk}{0.9647,0.8157,0.3019 / 0.05,0.17,0.82,0}
+\definecolor{orange}    {rgb/cmyk}{0.9882,0.4627,0.2039 / 0,0.65,0.86,0}
+\definecolor{pink}      {rgb/cmyk}{0.9686,0.7333,0.6941 / 0,0.35,0.26,0}
+\definecolor{grey}      {rgb/cmyk}{0.8549,0.8549,0.8549 / 0,0,0,0.2}
+\definecolor{red}       {rgb/cmyk}{0.9098,0.2471,0.2824 / 0,0.86,0.65,0}
+\definecolor{green}     {rgb/cmyk}{0,0.5333,0.2078 / 0.89,0.05,1,0.17}
+\definecolor{purple}    {rgb/cmyk}{0.4745,0.1373,0.5569 / 0.67,0.96,0,0}
+
+
+\lstset{
+    basicstyle=\footnotesize\ttfamily,% the size of the fonts that are used for the code
+    commentstyle=\color{green},       % comment style
+    keywordstyle=\bfseries\ttfamily\color{blue}, % keyword style
+    numberstyle=\sffamily\tiny\color{grey}, % the style that is used for the line-numbers
+    stringstyle=\color{purple},       % string literal style
+    rulecolor=\color{grey},           % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+    breakatwhitespace=false,          % sets if automatic breaks should only happen at whitespace
+    breaklines=true,                  % sets automatic line breaking
+    captionpos=b,                     % sets the caption-position to bottom
+    deletekeywords={},                % if you want to delete keywords from the given language
+    escapeinside={\%*}{*)},           % if you want to add LaTeX within your code
+    frame=single,                     % adds a frame around the code
+    xleftmargin=4pt, 
+    morekeywords={*,...},             % if you want to add more keywords to the set
+    numbers=left,                     % where to put the line-numbers; possible values are (none, left, right)
+    numbersep=10pt,                   % how far the line-numbers are from the code
+    showspaces=false,                 % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+    showstringspaces=false,           % underline spaces within strings only
+    showtabs=false,                   % show tabs within strings adding particular underscores
+    stepnumber=1,                     % the step between two line-numbers. If it's 1, each line will be numbered
+    tabsize=2,                        % sets default tabsize to 2 spaces
+    title=\lstname,                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+\newlength{\myl}
+\newcommand{\namesigdatehrule}[1]{\par\tikz \draw [black, densely dotted, very thick] (0.04,0) -- (#1,0);\par}
+\newcommand{\namesigdate}[2][]{%
+\settowidth{\myl}{#2}
+\setlength{\myl}{\myl+10pt}
+\begin{minipage}{\myl}%
+\begin{center}
+    #2  % Insert name from the command eg. \namesigdate{\authorname}
+    \vspace{1.5cm} % Spacing between name and signature line 
+    \namesigdatehrule{\myl}\smallskip % Signature line and a small skip
+    \small \textit{Signature} % Text under the signature line "Signature"
+    \vspace{1.0cm} % Spacing between "Signature" and the date line
+    \namesigdatehrule{\myl}\smallskip % Date line and a small skip
+    \small \textit{Date} % Text under date line "Date" 
+\end{center}
+\end{minipage}
+}
