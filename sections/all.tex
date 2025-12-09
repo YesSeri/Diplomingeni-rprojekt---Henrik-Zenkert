@@ -226,8 +226,8 @@ FROM latest l LEFT JOIN nix_git_link ngl
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=1.00\textwidth]{images/integration-test.pdf}
-    \caption{Matching host's current system path (yellow), with the correct git commit and branch(blue)}
+    \includegraphics[width=1.00\textwidth]{images/succesful-integration-test.png}
+    \caption{Matching host's current store path (yellow), with the correct git commit and branch(blue)}
     \label{fig:match-result}
 \end{figure}
 
@@ -235,12 +235,13 @@ The most complex SQL logic, Figure \ref{fig:diffcult-sql}, is the logic for matc
 
 To ensure correctness when working with such complex logic I needed a reliable way to test if my query is correct. I wrote a database seeding script that seeds the database with dummy data, where I have clearly marked the data the should be chosen.
 
-
 ---
 VErsion 2
 
-The most complex part of the system logic in the back end is matching 
 
+The most complex logic in the back end is matching the each host with its latest activation with the correct Git commit (revision) and branch, (see Appendix~\ref{appendix:matching-sql}). To do this we need to combine multiple tables, sorting in specific order, selecting the first, sometimes prioritizing if in a collection of commits a certain branch name exists.  Unit tests were insufficient to test correctness, since we need data in a database to actually test the query.
+
+To validate the SQL query I created a seeding script with dummy data. The actual  for the database with hosts, and then validated it in the UI. 
 
 \subsubsection{CI Mapping Simulation with Curl}
 
@@ -268,5 +269,32 @@ bool::from(client_api_key.as_bytes().ct_eq(server_api_key.as_bytes()))
 \label{fig:constant-time-comparison}
 \end{figure}
 While writing unit tests for the API-key validation, I realised that the comparison logic was vulnerable to side-channel attacks, as shown in Figure~\ref{fig:constant-time-comparison}. This issue was not detected by a test failure, instead the process of writing the unit tests made the potential side-channel risk apparent. This lead me to replacing string comparison with a constant-time comparison function to avoid timing attacks, thus aligning both with non-functional requirements and coding best practices.
+
+\appendix
+\section{SQL Query for Host with Latest Activation to Commit Matching}
+\label{appendix:matching-sql}
+\begin{figure}
+\begin{lstlisting}[language=SQL]
+WITH latest AS (
+  SELECT
+  DISTINCT ON (ac.hostname)
+    ac.activation_id, ac.activated_at,
+    ac.username, ac.store_path,
+    ac.activation_type, ac.hostname
+  FROM activation ac
+  ORDER BY ac.hostname, ac.activated_at DESC
+)
+SELECT DISTINCT ON(l.hostname) 
+  l.activation_id, l.activated_at,
+  l.username, l.store_path,
+  l.activation_type, l.hostname,
+  ngl.commit_hash, ngl.branch
+  FROM latest l
+  LEFT JOIN nix_git_link ngl ON ngl.store_path = l.store_path
+  ORDER BY l.hostname, ngl.branch = 'master' desc, ngl.linked_at asc
+;
+\end{lstlisting}
+\caption{SQL query used by the back end to match host with latest activation with Git commit mappings.}
+\end{figure}
 \end{document}
 
