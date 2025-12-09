@@ -205,43 +205,20 @@ These methods all have in common that they are pure, and that is why the were se
 \subsubsection{Local Integration Tests}
 
 \begin{figure}[h]
-\centering
-\begin{lstlisting}
-WITH latest AS (SELECT DISTINCT ON (a.hostname)
-  a.activated_at, a.store_path, a.hostname
-FROM activation a
-  ORDER BY a.hostname, a.activated_at DESC
-) 
-SELECT DISTINCT ON(l.hostname) 
-  l.activated_at, l.store_path, l.hostname,
-  ngl.commit_hash, ngl.branch
-FROM latest l LEFT JOIN nix_git_link ngl 
-  ON ngl.store_path = l.store_path 
-  ORDER BY 
-    l.hostname, ngl.branch = 'master' desc, ngl.linked_at ASC;
-\end{lstlisting}
-\caption{Complex SQL logic tested through integration tests}
-\label{fig:diffcult-sql}
-\end{figure}
-
-\begin{figure}[h]
     \centering
     \includegraphics[width=1.00\textwidth]{images/succesful-integration-test.png}
     \caption{Matching host's current store path (yellow), with the correct git commit and branch(blue)}
     \label{fig:match-result}
 \end{figure}
 
-The most complex SQL logic, Figure \ref{fig:diffcult-sql}, is the logic for matching the hosts with the latest store path to commit mapping, the result of which can be seen in Figure \ref{fig:match-result}. The SQL query identifies, for each host, the most recent activation using the \lstinline{WITH latest}, CTE (Common Table Expression). It then selects the commit mapping with the earliest \lstinline{linked_at} timestamp, that corresponds to selected activation's store path, while always prioritizing mappings with branch named \texttt{master} over other branches.
 
-To ensure correctness when working with such complex logic I needed a reliable way to test if my query is correct. I wrote a database seeding script that seeds the database with dummy data, where I have clearly marked the data the should be chosen.
+The most complex logic in the back end is matching the each host with its latest activation with the correct Git commit (revision) and branch, (see Appendix~\ref{appendix:matching-sql}). It must select the most recent activation for each host, join it with all commit mappings for the activation's store path. Among these mappings, the query selects the row with the earliest \lstinline{linked_at} timestamp, but prioritizing rows with a branch called 'master' over mapping rows.
 
----
-VErsion 2
+Since this logic involves ordering rows, multiple times on multiple arguments, and have a non-trivial \lstinline{JOIN}, and since unit tests generally are never enough to test SQL queries, correctness needs to be validated through integration tests. 
 
+The integration test was created by writing a carefully constructed dummy data seeding script. I designed the seed data manually, and thought through what the expected behaviour should be and then explictly marked the correct and wrong commit hashes of the mapping. For the entry with hostname \textit{test-1} the correct hash, that should display, was marked \textit{3CORRECT}, where as the other two, a later master branch commit, and an earlier commit from a branch not called master, were called '00latest' and '555WRONG'. This made it immediately clear when testing, wheter the system had mapped correctly.
 
-The most complex logic in the back end is matching the each host with its latest activation with the correct Git commit (revision) and branch, (see Appendix~\ref{appendix:matching-sql}). To do this we need to combine multiple tables, sorting in specific order, selecting the first, sometimes prioritizing if in a collection of commits a certain branch name exists.  Unit tests were insufficient to test correctness, since we need data in a database to actually test the query.
-
-To validate the SQL query I created a seeding script with dummy data. The actual  for the database with hosts, and then validated it in the UI. 
+After seeding the database, the back end part of the system was started and then I could use the UI to confirm that the expected commits appeared in the view, as shown in Figure~\ref{fig:match-result}.
 
 \subsubsection{CI Mapping Simulation with Curl}
 
