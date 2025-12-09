@@ -91,13 +91,14 @@ The system requirements are divided into functional and non-functional requireme
 
 
 \subsection{Nix Package Manager and NixOS}
+To understand the problem we want to solve, we also need to understand what Nix and NixOS is.
 NixOS is a Linux distribution built with the Nix package manager, which enables declarative and reproducible systems. In Nix, the inputs required to build a package, e.g., source files, compilers, environment variables, libraries, and more, are specified in a \lstinline{.nix} file, and when using flakes (a newer workflow for nix), their exact versions are pinned in a \lstinline{flake.lock} file.
 
 To understand Nix we can compare it to how pure function in functional programming works. A pure function has no hidden state and , it will, for the same input, return the same output.
 
 Drawing inspiration from this, nix does the same for software builds. In your Nix expression, you list all of your required inputs, and for the same build inputs the build artifact will, regardless of where, how, or when it is built, always be the same.
 
-The build inputs all appear in the final store path of the artifact under \lstinline{/nix/store/<unique-hash>-<name>}, and the unique hash is calculated from all the build inputs. If you change something small, such as an environment variable, the inputs will be altered and thus the hash of the build artifact will be changed. This ensures reproducible and deterministic builds. If the store path is identical, the contents are identical as well. 
+The build inputs all appear in the final store path of the artifact under \lstinline{/nix/store/<hash>-<name>}, and the unique hash is calculated from all the build inputs. If you change something small, such as an environment variable, the inputs will be altered and thus the hash of the build artifact will be changed. This ensures reproducible and deterministic builds. If the store path is identical, the contents are identical as well. 
 
 To ensure that the inputs themselves(which are also Nix expressions) have not been altered, Nix downloads all of the sources and evaluates the nix expressions. If the output hash does not match the expected hash in the input, something unexpected has happened. The input might have been corrupted, or tampered with, and the build fails. 
 
@@ -120,7 +121,9 @@ These two problems may lead to the classic "it works on my machine" problem, and
 
 By treating builds like pure functions and embedding all inputs directly into the Nix store paths, Nix enables strong reproducibility guarantees. These ideas form one of the foundations for the system developed in this project, which relies on the deterministic nature of Nix builds to support reliable provenance tracking and auditing.
 
-\subsection{Embedding git commit into Nix expression}
+\subsubsection{Embedding Git commit into Nix expression}
+
+One might think that you can solve this problem of mapping between store path and git commit at when builing the NixOS system image. Including the current commit hash as a build input would mean that every commit produces a different store path. This would make it impossible to see that a server actually is unchanged over time.
 
 % explain why we can't do that here??? Or in 
 
@@ -273,5 +276,21 @@ SELECT DISTINCT ON(l.hostname)
 \end{lstlisting}
 \caption{SQL query used by the back end to match host with latest activation with Git commit mappings.}
 \end{figure}
+
+\begin{lstlisting}[language=Matlab, caption = Monte Carlo simulation to estimate the value of $\pi$, label=lst:montecarlo]
+%% Monte Carlo simulation, estimation of pi
+m=1E7;
+
+x=rand(m,1);
+y=rand(m,1);
+
+g = x.^2+y.^2-1;
+
+%dots outside
+Pf = sum((g)<=0)/m
+
+pi = 4*Pf
+\end{lstlisting}
+
 \end{document}
 
