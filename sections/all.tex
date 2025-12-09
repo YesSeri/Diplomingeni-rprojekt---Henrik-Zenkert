@@ -82,7 +82,7 @@ The system requirements are divided into functional and non-functional requireme
 \end{itemize}
 \subsubsection{Non-Functional Requirements:}
 \begin{itemize}
-	\item Security, no SSH needed from CI to servers
+	\item Security, the system must avoid the need for privileged access (as used in the current SSH-based solution) and must authenticate endpoint access where appropriate
 	\item Reliability, must survive network interruptions
 	\item Extensibility, new metadata fields can be added later
 	\item Performance, must work well when deployed to 200 servers, each activating at most once per day on average.
@@ -124,232 +124,99 @@ By treating builds like pure functions and embedding all inputs directly into th
 \newpage
 \section{Project Plan}
 \subsection{Methodology}
+\section{Methodology}
+\subsection{Requirements Elicitation}
+
+The project began with a face where I gathered requirements. The first steps was looking at the current solution and understanding its limitations and how it worked.
+
+In collaboration with the infrastructure team at DBC digital in particular Adam and Sarah, we worked out the requirements for the project to be considered successful. Among these criterias were eliminating the SSH access from the CI server to the server fleet, reducing delays in UI updates, and enabling some extensibility through the use of arbitrary metadata.
+
+In addition, the scope of the project was limited to not include any changes to the CI server on my part. DBC digital ensured that any changes to that part of the system will be done by them. In more generic terms this can be described as my system is responsible for receiving the mappings between git commit hash and a store path but not for creating them.
+
+This was great because this enabled a very clean and minimal interface between what I was responsible for and what they were responsible for. 
+
+\subsection{Architectural and System Design}
+
+When selecting the architecture I opted for a top down model where I first consider the overall system and then when decided on a good architecture I selected technologies. 
+
+There were two important architectural decisions regarding what model to use for moving data to backend. 
+
+When moving data from the server fleet to the backend we selected a pull based approach. This enables us to have a very basic HTTP server serving log file as the only thing the servers need to do. If we were to choose push-based approach the logic reciting on the server fleet would have to be more advanced. For example the servers in the fleet would individually need to be able to detect when a request has potentially silently failed and have a retry logic to send the data again. 
+
+Moving to a pool-based approach means that only the backend will need to have this logic instead of hundreds of servers.
+
+In addition to this having a pool based approach lets the backend decide on the load. If the approach is push based, potentially hundreds of servers could at once and data to the backend, overwhelming it. 
+
+Thirdly we avoid the need for authentication. Since the back and fetches the data it can't just fetch from the service it want to fetch from, and the data it vectors is not sensitive so there is no need for authentication. With a pull based approach we would need authentication so that malicious actors cannot send junk data, and we avoid the need for handling and rotating API keys for hundreds of servers. 
+
+When moving data from the CI server to the backend we selected a push-based approach. Several of the problems mentioned above goes away. There is only one CI server so handling of API keys is not a problem. The back and won't be overwhelmed by a single CI server. 
+
+We also gain one thing. Since the ca server notes exactly when it has built the store path from the git commit, it can send the data immediately to them back end meaning that data will be fresher.
+
+\subsection{Iterative Implementation Strategy}
+
+We agreed to use an iterative process where one of the key goals was getting a MVP(minimal viable product) up and running as soon as possible, so that DBC Digital can set up their CI servers to send the mapping data to the backend. 
+
+To make the process more iterative, and arrive at MVP earlier, we decided to put up an nginx proxy up to statically serve the activation log file that the old host overview system used, and use that when working on the first prototype of hostmap.
+
+\subsection{Testing and Validation}
+
+\subsection{Evaluation Methodology}
+
+\subsection{Documentation and Traceability}
+
 \newpage
 \section{Solution}
 \newpage
 \section{Implementation}
 \newpage
 \section{Evaluation}
+
+\subsection{Evaluation Strategy}
+The project was tested using a combination of local testning, integration testing against test servers for activation log fetching, testing correctness of matching mappings to fetched logs and end-user tests.
+
+\subsection{Testing and Validation}
+To make sure that the system fulfills the requirements a series of tests were conducted, at different levels for different parts of the system. 
+
+\subsubsection{Unit Tests}
+Unit tests were written for selected parts of the core of the system. Most of the time writing unit tests went into making sure the authentication of API keys was correctly implemented. These tests included handling malformed headers in authentication request, incorrect prefixes, and unexpected unexpected whitespace. 
+
+While writing these tests, a vulnerabilty was discovered. The API key comparisons were open to side-channel attacks, since it used string equality comparison instead of constant-time equality comparison. Although this was not discovered through a test failing, the process of writting the tests made the issue apparent. The comparison was changed to use constant-time comparison which improved security in the final product, and aligned with one of the non-functional requirements. 
+
+Some non-critical components were also tested, and here I wrote the tests before writing the implementation of the method. This was done for the method that shortens the system paths into easier to read text by removing some of the hash in the middle.
+
+I also wrote unit tests for conversion between errors to ensure that the correct HTTP status code is returned upon error.
+
+These methods all have in common that they are pure, and that is why the were selected for unit testing. Due to time constraints, and that the conversions DTO (Data Transfer Object) and model and back were trivial, I elected not to write unit tests for this mapping.
+
+
+\subsubsection{Local Integration Tests}
+
+\subsubsection{CI Mapping Simulation with Curl}
+
+\subsubsection{Security Considerations}
+
+\subsubsection{Data Freshness Improvements}
+
+\subsection{Performance Considerations SKIP??}
+
+\subsection{User Evaluation}
+
 \newpage
+
 \section{Discussion}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}
+// before - vulnerable to timing differences
+client_api_key == server_api_key;
+
+// after - constant-time comparison
+bool::from(client_api_key.as_bytes().ct_eq(server_api_key.as_bytes()))
+\end{lstlisting}
+\caption{Replacing the string comparison with a constant-time comparison to avoid timing-based side channels.}
+\label{fig:constant-time-comparison}
+\end{figure}
+While writing unit tests for the API-key validation, I realised that the comparison logic was vulnerable to side-channel attacks, as shown in Figure~\ref{fig:constant-time-comparison}. This issue was not detected by a test failure, instead the process of writing the unit tests made the potential side-channel risk apparent. This lead me to replacing string comparison with a constant-time comparison function to avoid timing attacks, thus aligning both with non-functional requirements and coding best practices.
 \end{document}
 
-% # ⭐ **1. Abstract**
-% 
-% **Length:** ~½ page maximum
-% **Purpose:** Give the reader the *entire story* in compressed form.
-% 
-% Include **four things** (CGIE model):
-% 
-% 1. **Context:**
-% 
-%    * DBC Digital uses NixOS; provenance matters for reproducibility and auditing.
-% 
-% 2. **Gap:**
-% 
-%    * Current provenance tracking is fragmented (CSV + SSH + PHP), insecure, and not scalable.
-% 
-% 3. **Innovation:**
-% 
-%    * You built *hostmap*: a secure, unified system linking Nix store paths to Git commits.
-% 
-% 4. **Evaluation:**
-% 
-%    * Summarize results: improved reliability, security, data quality; matches or exceeds old system.
-% 
-% **Do *not* include:** code, citations, detailed architecture.
-% 
-% ---
-% 
-% # ⭐ **2. Introduction**
-% 
-% This section *motivates* the project and gives the reader an overview.
-% 
-% ### 2.1 **Context, Gap, Innovation and Evaluation (CGIE)**
-% 
-% * Introduce the infrastructure and why provenance matters.
-% * Explain shortcomings of the existing system.
-% * Present your high-level contribution (hostmap).
-% * Describe how the solution is evaluated (reliability + security + usability).
-% 
-% This subsection should read like a **story**, not like a requirements list.
-% 
-% ### 2.2 **Contributions**
-% 
-% Make a bullet list of the *new things you built*. Examples:
-% 
-% * A secure host overview service (hostmap)
-% * An activation scraper and ingestion pipeline
-% * A CI integration producing commit→store-path mappings
-% * A UI or API for cluster consistency checks
-% * Documentation suitable for internal or open-source use
-% * A reproducibility verification mechanism
-% 
-% ***Important:*** Contributions should be *sharp, measurable, technical*.
-% 
-% ---
-% 
-% # ⭐ **3. Problem Description and System Requirements**
-% 
-% This is where you formally state the *problem you are solving* and what a solution must do.
-% 
-% ### **Problem Description**
-% 
-% * Explain the exact challenge: provenance reconstruction is fragmented, insecure, and hard to query.
-% * Clarify what operators *cannot* do today (e.g., cluster consistency verification).
-% * Define the scope: you are not redesigning the entire CI system; only provenance tracking.
-% 
-% ### **System Requirements**
-% 
-% Use two parts:
-% 
-% #### **Functional Requirements (FR):**
-% 
-% Examples:
-% 
-% * The system must ingest activation events from all hosts.
-% * The system must store mappings between store paths and Git revisions.
-% * The system must allow operators to query the current revision per host.
-% * The system must detect when nodes in a cluster run different revisions.
-% 
-% #### **Non-Functional Requirements (NFR):**
-% 
-% Examples:
-% 
-% * Security (no SSH needed from CI → servers)
-% * Reliability (must survive network interruptions)
-% * Extensibility (new data fields can be added later)
-% * Performance (support X servers, Y activations/day)
-% * Maintainability (simple deployment, readable code)
-% 
-% This section sets **success criteria** for your solution.
-% 
-% ---
-% 
-% # ⭐ **4. Theoretical Background (Optional)**
-% 
-% Include **only if needed**.
-% This section explains concepts the reader must understand *before* reading the solution.
-% 
-% Examples relevant to your thesis:
-% 
-% * How NixOS builds systems (system closure, store paths, derivations)
-% * Why Git commit metadata cannot be embedded in Nix derivations (infinite recursion)
-% * Event sourcing / logging theory (if relevant)
-% * Software provenance concepts
-% * Basics of distributed systems observability
-% 
-% If the reader needs these to understand later sections → include them.
-% If not → keep this section short or omit it entirely.
-% 
-% ---
-% 
-% # ⭐ **5. Project Plan**
-% 
-% Describe how you structured and executed the project.
-% 
-% ### Include:
-% 
-% * Timeline (e.g., Gantt chart or milestones)
-% * Major phases (research, design, prototype, implementation, evaluation)
-% * Tools used for planning (Git, Notion, Jira, etc.)
-% * Any collaboration or supervision constraints
-% 
-% **This section is not technical**—it describes *how* you organized the work.
-% 
-% ### 5.1 **Methodology**
-% 
-% Explain your scientific and engineering approach.
-% 
-% Examples:
-% 
-% * CGIE as a guiding framework
-% * Iterative development (e.g., Agile-like workflow)
-% * How design decisions were evaluated
-% * Data collection methods for evaluation
-% * Why you chose Rust, Axum, SQL, Nix, etc.
-% 
-% ---
-% 
-% # ⭐ **6. Solution**
-% 
-% This is the **high-level design / architecture**, NOT the implementation.
-% 
-% ### Include:
-% 
-% * System overview diagram
-% * Architecture components:
-% 
-%   * Activation logger
-%   * API / scraper
-%   * Database
-%   * CI-mapping ingestion
-%   * Web UI / CLI
-% * How data flows through the system
-% * Security design decisions
-% * Why this architecture satisfies the requirements
-% * Alternatives considered (and why rejected)
-% 
-% Think of this section as your **design document**.
-% 
-% ---
-% 
-% # ⭐ **7. Implementation**
-% 
-% This is where you go *into the details*.
-% 
-% ### Include:
-% 
-% * Technologies used (Rust, Axum, SQLx, Tera, etc.)
-% * Database schema + migrations
-% * API endpoints
-% * Data structures
-% * CI integration mechanism
-% * How activation data is parsed and validated
-% * Error handling
-% * Deployment considerations
-% * Code snippets (when they clarify something)
-% 
-% Avoid huge code dumps—summarize with diagrams and short snippets instead.
-% 
-% ---
-% 
-% # ⭐ **8. Evaluation**
-% 
-% This shows whether your system works, based on the requirements from Section 3.
-% 
-% ### Include measurable results:
-% 
-% * Correctness of store-path → commit mappings
-% * How well the system reconstructs activation history
-% * Performance tests (ingestion speed, query speed)
-% * Security improvements (no SSH from CI → servers)
-% * Comparison table: *old vs new system*
-% 
-% ### Also include qualitative evaluation:
-% 
-% * Operator usability
-% * Maintainability
-% * Extensibility
-% * Deployment simplicity
-% 
-% Tie all results back to the requirements you defined earlier.
-% 
-% ---
-% 
-% # **9. Discussion**
-% 
-% Here you reflect critically.
-% 
-% ### Include:
-% 
-% * Limitations of your system
-% * Unexpected design challenges
-% * What you would do differently with more time
-% * How the system could evolve (future work)
-% * Risks and assumptions
-% * Generalizability — can this be used outside DBC Digital?
-% 
-% This section shows **maturity and academic reflection**.
-% 
-% 
