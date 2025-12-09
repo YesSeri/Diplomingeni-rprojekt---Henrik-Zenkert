@@ -73,14 +73,14 @@ In addition to this recursive issue, we would also not be able to verify that a 
 \subsection{System Requirements}
 
 The system requirements are divided into functional and non-functional requirements.
-\subsubsection{Functional Requirements:}
+\subsubsection{Functional Requirements}
 \begin{itemize}
 	\item The system must ingest activation events from all hosts
 	\item The system must store mappings between store paths and Git revisions
-	\item The system must allow operators to query the current revision per host
-	\item The system must present hosts grouped into clusters in the UI
+	\item The system must allow end users to view the current revision per host
+	\item The system must present hosts grouped by a custom key in the UI
 \end{itemize}
-\subsubsection{Non-Functional Requirements:}
+\subsubsection{Non-Functional Requirements}
 \begin{itemize}
 	\item Security, the system must avoid the need for privileged access (as used in the current SSH-based solution) and must authenticate endpoint access where appropriate
 	\item Reliability, must survive network interruptions
@@ -89,8 +89,8 @@ The system requirements are divided into functional and non-functional requireme
 	\item Maintainability, simple deployment
 \end{itemize}
 
-\newpage
-\section{Theoretical Background (Optional)}
+
+\subsection{Nix Package Manager and NixOS}
 NixOS is a Linux distribution built with the Nix package manager, which enables declarative and reproducible systems. In Nix, the inputs required to build a package, e.g., source files, compilers, environment variables, libraries, and more, are specified in a \lstinline{.nix} file, and when using flakes (a newer workflow for nix), their exact versions are pinned in a \lstinline{flake.lock} file.
 
 To understand Nix we can compare it to how pure function in functional programming works. A pure function has no hidden state and , it will, for the same input, return the same output.
@@ -99,7 +99,7 @@ Drawing inspiration from this, nix does the same for software builds. In your Ni
 
 The build inputs all appear in the final store path of the artifact under \lstinline{/nix/store/<unique-hash>-<name>}, and the unique hash is calculated from all the build inputs. If you change something small, such as an environment variable, the inputs will be altered and thus the hash of the build artifact will be changed. This ensures reproducible and deterministic builds. If the store path is identical, the contents are identical as well. 
 
-To ensure that the inputs themselves(which are also nix expressions) have not been altered, Nix downloads all of the sources and evaluates the nix expressions. If the output hash does not match the expected hash in the input, something unexpected has happened. The input might have been corrupted, or tampered with, and the build fails. 
+To ensure that the inputs themselves(which are also Nix expressions) have not been altered, Nix downloads all of the sources and evaluates the nix expressions. If the output hash does not match the expected hash in the input, something unexpected has happened. The input might have been corrupted, or tampered with, and the build fails. 
 
 \begin{figure}[h]
 \begin{lstlisting}
@@ -109,7 +109,7 @@ pillow==1.2.0
 requests==1.3.1
 cryptography==2.0.0
 \end{lstlisting}
-\caption{An example \texttt{requirements.txt} file that appears reproducible but does not capture system-level dependencies, interpreter versions, or platform differences.}
+\caption{An example \texttt{requirements.txt} file that looks reproducible, but is not.}
 \label{lst:reqfile}
 \end{figure}
 
@@ -120,21 +120,49 @@ These two problems may lead to the classic "it works on my machine" problem, and
 
 By treating builds like pure functions and embedding all inputs directly into the Nix store paths, Nix enables strong reproducibility guarantees. These ideas form one of the foundations for the system developed in this project, which relies on the deterministic nature of Nix builds to support reliable provenance tracking and auditing.
 
+\subsection{Embedding git commit into Nix expression}
+
+% explain why we can't do that here??? Or in 
 
 \newpage
-\section{Project Plan}
-\subsection{Methodology}
 \section{Methodology}
-\subsection{Requirements Elicitation}
+% the methodology i have internalized
+% should only describe iterative process, not what I did
+\subsection{Gathering Requirements}
 
-The project began with a face where I gathered requirements. The first steps was looking at the current solution and understanding its limitations and how it worked.
+The project began with a phase where I gathered requirements. The first steps was looking at the current solution and understanding its limitations and how it worked.
 
-In collaboration with the infrastructure team at DBC digital in particular Adam and Sarah, we worked out the requirements for the project to be considered successful. Among these criterias were eliminating the SSH access from the CI server to the server fleet, reducing delays in UI updates, and enabling some extensibility through the use of arbitrary metadata.
+In collaboration with the infrastructure team at DBC digital in particular Adam and Sarah, I worked out the requirements for the project to be considered successful. Among these criterias were eliminating the SSH access from the CI server to the server fleet, reducing delays in UI updates, and enabling some extensibility through the use of arbitrary metadata.
 
 In addition, the scope of the project was limited to not include any changes to the CI server on my part. DBC digital ensured that any changes to that part of the system will be done by them. In more generic terms this can be described as my system is responsible for receiving the mappings between git commit hash and a store path but not for creating them.
 
 This was great because this enabled a very clean and minimal interface between what I was responsible for and what they were responsible for. 
 
+
+\subsection{Testing and Validation}
+Testing is necessary to be able to prove that a system lives up to the requirements. A mix of testing methods were agreed upon, were one of the criterias is that it should at the very least mimic all of the functionality of the old system.
+
+
+\subsection{Documentation and Traceability}
+
+\newpage
+\section{Process}
+% how the methodology relates to the actual process, what worked?
+
+\subsection{Developmental Method}
+I Suggested they agree
+
+We agreed to use an iterative process where one of the key goals was getting a MVP(minimal viable product) up and running as soon as possible, so that DBC Digital can set up their CI servers to send the mapping data to the backend. 
+
+To make the process more iterative, and arrive at MVP earlier, we decided to put up an nginx proxy up to statically serve the activation log file that the old host overview system used, and use that when working on the first prototype of hostmap.
+
+In addition to this, we decided that I will meet up at their offices two times a week, to make the development process more efficient.
+
+----- 
+
+hint at the solution in architectural and system design
+\newpage
+\section{Solution}
 \subsection{Architectural and System Design}
 
 When selecting the architecture I opted for a top down model where I first consider the overall system and then when decided on a good architecture I selected technologies. 
@@ -147,28 +175,12 @@ Moving to a pool-based approach means that only the backend will need to have th
 
 In addition to this having a pool based approach lets the backend decide on the load. If the approach is push based, potentially hundreds of servers could at once and data to the backend, overwhelming it. 
 
-Thirdly we avoid the need for authentication. Since the back and fetches the data it can't just fetch from the service it want to fetch from, and the data it vectors is not sensitive so there is no need for authentication. With a pull based approach we would need authentication so that malicious actors cannot send junk data, and we avoid the need for handling and rotating API keys for hundreds of servers. 
+Thirdly we avoid the need for authentication. Since the back end fetches the data it can't just fetch from the service it want to fetch from, and the data it vectors is not sensitive so there is no need for authentication. With a pull based approach we would need authentication so that malicious actors cannot send junk data, and we avoid the need for handling and rotating API keys for hundreds of servers. 
 
 When moving data from the CI server to the backend we selected a push-based approach. Several of the problems mentioned above goes away. There is only one CI server so handling of API keys is not a problem. The back and won't be overwhelmed by a single CI server. 
 
 We also gain one thing. Since the ca server notes exactly when it has built the store path from the git commit, it can send the data immediately to them back end meaning that data will be fresher.
 
-\subsection{Iterative Implementation Strategy}
-
-We agreed to use an iterative process where one of the key goals was getting a MVP(minimal viable product) up and running as soon as possible, so that DBC Digital can set up their CI servers to send the mapping data to the backend. 
-
-To make the process more iterative, and arrive at MVP earlier, we decided to put up an nginx proxy up to statically serve the activation log file that the old host overview system used, and use that when working on the first prototype of hostmap.
-
-\subsection{Testing and Validation}
-
-\subsection{Evaluation Methodology}
-
-\subsection{Documentation and Traceability}
-
-\newpage
-\section{Solution}
-\newpage
-\section{Implementation}
 \newpage
 \section{Evaluation}
 
@@ -191,6 +203,29 @@ These methods all have in common that they are pure, and that is why the were se
 
 
 \subsubsection{Local Integration Tests}
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}
+WITH latest AS (SELECT DISTINCT ON (ac.hostname)
+ac.activation_id, ac.activated_at, ac.username, ac.store_path, ac.activation_type, ac.hostname
+FROM activation ac
+     ORDER BY ac.hostname, ac.activated_at DESC
+) SELECT DISTINCT ON(l.hostname) l.activation_id, l.activated_at, l.username,
+    l.store_path, l.activation_type, l.hostname, ngl.commit_hash AS "commit_hash?", ngl.branch AS "branch?"
+    FROM latest l
+    LEFT JOIN nix_git_link ngl ON ngl.store_path = l.store_path
+    ORDER BY l.hostname, ngl.branch = 'master' desc, ngl.linked_at asc
+\end{lstlisting}
+\caption{Complex sql logic tested through integration tests}
+\label{fig:diffcult-sql}
+\end{figure}
+
+The most complex SQL logic, Figure \ref{fig:diffcult-sql}, is the logic for matching the hosts with the latest store path to commit mapping.
+
+First running the query manually and then local integration tests were created with a dummy database to enable testing some of the more complex SQL queries. In particular the one in \ref{fig:diffcult-sql}
+
+
 
 \subsubsection{CI Mapping Simulation with Curl}
 
