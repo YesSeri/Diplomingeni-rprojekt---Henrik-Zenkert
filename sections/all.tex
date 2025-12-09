@@ -207,23 +207,33 @@ These methods all have in common that they are pure, and that is why the were se
 \begin{figure}[h]
 \centering
 \begin{lstlisting}
-WITH latest AS (SELECT DISTINCT ON (ac.hostname)
-ac.activation_id, ac.activated_at, ac.username, ac.store_path, ac.activation_type, ac.hostname
-FROM activation ac
-     ORDER BY ac.hostname, ac.activated_at DESC
-) SELECT DISTINCT ON(l.hostname) l.activation_id, l.activated_at, l.username,
-    l.store_path, l.activation_type, l.hostname, ngl.commit_hash AS "commit_hash?", ngl.branch AS "branch?"
-    FROM latest l
-    LEFT JOIN nix_git_link ngl ON ngl.store_path = l.store_path
-    ORDER BY l.hostname, ngl.branch = 'master' desc, ngl.linked_at asc
+WITH latest AS (SELECT DISTINCT ON (a.hostname)
+  a.activated_at, a.store_path, a.hostname
+FROM activation a
+  ORDER BY a.hostname, a.activated_at DESC
+) 
+SELECT DISTINCT ON(l.hostname) 
+  l.activated_at, l.store_path, l.hostname,
+  ngl.commit_hash, ngl.branch
+FROM latest l LEFT JOIN nix_git_link ngl 
+  ON ngl.store_path = l.store_path 
+  ORDER BY 
+    l.hostname, ngl.branch = 'master' desc, ngl.linked_at ASC;
 \end{lstlisting}
-\caption{Complex sql logic tested through integration tests}
+\caption{Complex SQL logic tested through integration tests}
 \label{fig:diffcult-sql}
 \end{figure}
 
-The most complex SQL logic, Figure \ref{fig:diffcult-sql}, is the logic for matching the hosts with the latest store path to commit mapping.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.00\textwidth]{images/integration-test.pdf}
+    \caption{Matching host's current system path (yellow), with the correct git commit and branch(blue)}
+    \label{fig:match-result}
+\end{figure}
 
-First running the query manually and then local integration tests were created with a dummy database to enable testing some of the more complex SQL queries. In particular the one in \ref{fig:diffcult-sql}
+The most complex SQL logic, Figure \ref{fig:diffcult-sql}, is the logic for matching the hosts with the latest store path to commit mapping, the result of which can be seen in Figure \ref{fig:match-result}. The SQL query identifies, for each host, the most recent activation using the \lstinline{WITH latest}, CTE (Common Table Expression). It then selects the commit mapping with the earliest \lstinline{linked_at} timestamp, that corresponds to selected activation's store path, while always prioritizing mappings with branch named \texttt{master} over other branches.
+
+To ensure correctness when working with such complex logic I needed a reliable way to test if my query is correct. I wrote a database seeding script that seeds the database with dummy data, where I have clearly marked the data the should be chosen.
 
 
 
